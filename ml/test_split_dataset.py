@@ -8,14 +8,16 @@ def test_split_keeps_games_separate(tmp_path):
     train_path = tmp_path / "train.npz"
     validation_path = tmp_path / "validation.npz"
 
-    positions = np.zeros((6, 12, 8, 8), dtype=np.float32)
+    positions = np.zeros((6, 18, 8, 8), dtype=np.float32)
     moves = np.arange(6)
+    outcomes = np.array([2, 2, 1, 1, 0, 0])
     game_ids = np.array([0, 0, 1, 1, 2, 2])
 
     np.savez_compressed(
         input_path,
         positions=positions,
         moves=moves,
+        outcomes=outcomes,
         game_ids=game_ids,
     )
 
@@ -31,8 +33,11 @@ def test_split_keeps_games_separate(tmp_path):
 
     with np.load(train_path) as train_data:
         train_moves = set(train_data["moves"])
+        train_outcomes = train_data["outcomes"]
 
     with np.load(validation_path) as validation_data:
         validation_moves = set(validation_data["moves"])
+        validation_outcomes = validation_data["outcomes"]
 
     assert train_moves.isdisjoint(validation_moves)
+    assert len(train_outcomes) + len(validation_outcomes) == 6

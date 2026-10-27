@@ -1,2 +1,5 @@
 data/raw/
 data/*.npz
+models/*.pt
+.mongo-data/
+.env

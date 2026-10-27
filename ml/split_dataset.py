@@ -17,6 +17,7 @@ def split_dataset(
     with np.load(input_path) as dataset:
         positions = dataset["positions"]
         moves = dataset["moves"]
+        outcomes = dataset["outcomes"]
         game_ids = dataset["game_ids"]
 
     unique_game_ids = np.unique(game_ids)
@@ -41,12 +42,14 @@ def split_dataset(
         train_output_path,
         positions=positions[training_mask],
         moves=moves[training_mask],
+        outcomes=outcomes[training_mask],
     )
 
     np.savez_compressed(
         validation_output_path,
         positions=positions[validation_mask],
         moves=moves[validation_mask],
+        outcomes=outcomes[validation_mask],
     )
 
     return training_mask.sum(), validation_mask.sum()

@@ -7,10 +7,17 @@ import numpy as np
 from ml.board_encoding import encode_board
 from ml.move_encoding import encode_move
 
+RESULT_TO_CLASS = {
+    "0-1": 0,
+    "1/2-1/2": 1,
+    "1-0": 2,
+}
+
 
 def create_examples_from_pgn(pgn_path, max_games=None):
     positions = []
     moves = []
+    outcomes = []
     game_ids = []
     games_read = 0
 
@@ -21,11 +28,19 @@ def create_examples_from_pgn(pgn_path, max_games=None):
             if game is None:
                 break
 
+            result = game.headers.get("Result", "*")
+
+            # A value model needs the final result of each game.
+            if result not in RESULT_TO_CLASS:
+                continue
+
+            outcome_class = RESULT_TO_CLASS[result]
             board = game.board()
 
             for move in game.mainline_moves():
                 positions.append(encode_board(board))
                 moves.append(encode_move(move))
+                outcomes.append(outcome_class)
                 game_ids.append(games_read)
                 board.push(move)
 
@@ -35,17 +50,18 @@ def create_examples_from_pgn(pgn_path, max_games=None):
                 break
 
     if not positions:
-        raise ValueError("No playable moves were found in the PGN file.")
+        raise ValueError("No playable moves with known results were found.")
 
     return (
-    np.stack(positions),
-    np.array(moves, dtype=np.int64),
-    np.array(game_ids, dtype=np.int64),
-)
+        np.stack(positions),
+        np.array(moves, dtype=np.int64),
+        np.array(outcomes, dtype=np.int64),
+        np.array(game_ids, dtype=np.int64),
+    )
 
 
 def save_dataset(pgn_path, output_path, max_games=None):
-    positions, moves, game_ids = create_examples_from_pgn(
+    positions, moves, outcomes, game_ids = create_examples_from_pgn(
         pgn_path=pgn_path,
         max_games=max_games,
     )
@@ -57,7 +73,8 @@ def save_dataset(pgn_path, output_path, max_games=None):
         output_file,
         positions=positions,
         moves=moves,
-         game_ids=game_ids,
+        outcomes=outcomes,
+        game_ids=game_ids,
     )
 
     return len(moves)

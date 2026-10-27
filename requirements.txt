@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+python-chess
+torch
+pymongo>=4.19,<5
+PyJWT>=2.15,<3

@@ -59,6 +59,7 @@ function App() {
   const [selectedSquare, setSelectedSquare] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [analysis, setAnalysis] = useState(null);
   
 
   const boardSquares = fenToSquares(game ? game.fen : START_FEN);
@@ -82,10 +83,29 @@ function App() {
     return piece && piece === piece.toUpperCase();
   }
 
+  async function loadAnalysis(activeGameId) {
+    try {
+      const response = await fetch(
+        `${API_URL}/games/${activeGameId}/analysis`,
+      );
+
+      if (!response.ok) {
+        setAnalysis(null);
+        return;
+      }
+
+      setAnalysis(await response.json());
+    } catch {
+      // Analysis is optional, so a failed request must not block the game.
+      setAnalysis(null);
+    }
+  }
+
   async function startNewGame() {
     setIsLoading(true);
     setError("");
     setSelectedSquare(null);
+    setAnalysis(null);
 
     try {
       const response = await fetch(`${API_URL}/games`, {
@@ -104,6 +124,7 @@ function App() {
 
       setGameId(data.game_id);
       setGame(data.game);
+      await loadAnalysis(data.game_id);
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -134,6 +155,7 @@ function App() {
       }
 
       setGame(data.game);
+      await loadAnalysis(gameId);
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -166,9 +188,17 @@ function App() {
     let move = `${selectedSquare}${square}`;
 
     // Temporary rule: White pawn promotions automatically become queens.
-    if (selectedSquare[1] === "7" && square[1] === "8") {
-      move += "q";
-    }
+    const selectedPiece = boardSquares.find(
+  ({ square: boardSquare }) => boardSquare === selectedSquare,
+)?.piece;
+
+if (
+  selectedPiece === "P" &&
+  selectedSquare[1] === "7" &&
+  square[1] === "8"
+) {
+  move += "q";
+}
 
     setSelectedSquare(null);
     makeHumanMove(move);
@@ -265,6 +295,46 @@ function App() {
                 <h3>Move history</h3>
                 <p>{game.move_history.join(" ") || "No moves yet."}</p>
               </div>
+
+              {analysis && (
+                <section className="analysis-panel">
+                  <h3>ML thinking</h3>
+                  <p className="analysis-value">
+                    White position value: {analysis.expected_white_value >= 0 ? "+" : ""}
+                    {analysis.expected_white_value.toFixed(2)}
+                  </p>
+
+                  <div className="outcome-probabilities">
+                    {[
+                      ["White win", "white_win"],
+                      ["Draw", "draw"],
+                      ["Black win", "black_win"],
+                    ].map(([label, key]) => {
+                      const probability = analysis.outcome_probabilities[key];
+
+                      return (
+                        <div className="outcome-row" key={key}>
+                          <span>{label}</span>
+                          <div className="probability-track">
+                            <span
+                              className={`probability-fill ${key}`}
+                              style={{ width: `${probability * 100}%` }}
+                            />
+                          </div>
+                          <strong>{(probability * 100).toFixed(1)}%</strong>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <h4>Top candidate moves</h4>
+                  <ol className="candidate-moves">
+                    {analysis.top_moves.map((move) => (
+                      <li key={move.uci}>{move.san}</li>
+                    ))}
+                  </ol>
+                </section>
+              )}
 
               <p className="hint">You play White. The bot plays Black.</p>
             </>

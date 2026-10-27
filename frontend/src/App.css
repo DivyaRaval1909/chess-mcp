@@ -192,3 +192,81 @@ h1 {
   color: #cbd5e1;
   text-transform: capitalize;
 }
+
+.analysis-panel {
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid #476175;
+  border-radius: 10px;
+  background: #1b2732;
+}
+
+.analysis-panel h3,
+.analysis-panel h4 {
+  margin: 0;
+}
+
+.analysis-panel h4 {
+  margin-top: 18px;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.analysis-value {
+  margin: 8px 0 16px;
+  color: #77c1f3;
+  font-weight: 700;
+}
+
+.outcome-probabilities {
+  display: grid;
+  gap: 10px;
+}
+
+.outcome-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 44px;
+  align-items: center;
+  gap: 8px;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+}
+
+.outcome-row strong {
+  color: #f8fafc;
+  text-align: right;
+}
+
+.probability-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #34495b;
+}
+
+.probability-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.probability-fill.white_win {
+  background: #63c78b;
+}
+
+.probability-fill.draw {
+  background: #77c1f3;
+}
+
+.probability-fill.black_win {
+  background: #e28c8c;
+}
+
+.candidate-moves {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 20px;
+  margin: 10px 0 0;
+  padding-left: 20px;
+  color: #f8fafc;
+}
